@@ -3,6 +3,10 @@
 <main class="container book-layout">
   <div class="book-main">
 
+    @if (svc.error(); as msg) {
+      <p class="alert" role="alert">{{ msg }}</p>
+    }
+
     @if (svc.done()) {
       <!-- CONFIRMATION -->
       <div class="done-card">
@@ -52,7 +56,7 @@
               <div class="cal-grid">
                 <span></span>
                 @for (c of svc.cells(); track c.n) {
-                  <button type="button" class="day" [class.selected]="svc.day() === c.n" [attr.aria-label]="c.aria" (click)="svc.pickDay(c.n)">{{ c.n }}</button>
+                  <button type="button" class="day" [class.selected]="svc.day() === c.n" [disabled]="c.full" [attr.aria-label]="c.aria" (click)="svc.pickDay(c.n)">{{ c.n }}</button>
                 }
               </div>
             </div>
@@ -82,7 +86,7 @@
           <p class="muted page-sub">Plus ton package est complet, plus ton live touche de monde.</p>
 
           <div class="pkg-grid">
-            @for (p of svc.packages; track p.id) {
+            @for (p of svc.packages(); track p.id) {
               <button type="button" class="pkg" [class.selected]="svc.pkgId() === p.id" (click)="svc.pkgId.set(p.id)">
                 @if (p.badge) {
                   <span class="badge">Le plus choisi</span>
@@ -163,7 +167,7 @@
 
           <div class="actions actions--between">
             <button type="button" class="btn btn-outline" (click)="svc.back()">Retour</button>
-            <button type="button" class="btn btn-accent btn-lg" (click)="svc.pay()">Payer {{ svc.money(svc.total()) }}</button>
+            <button type="button" class="btn btn-accent btn-lg" [disabled]="!svc.canPay()" (click)="svc.pay()">{{ svc.paying() ? 'Paiement en cours...' : 'Payer ' + svc.money(svc.total()) }}</button>
           </div>
         }
       }

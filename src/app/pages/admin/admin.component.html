@@ -1,125 +1,177 @@
-<div class="admin">
-  <!-- MENU LATÉRAL -->
-  <aside class="sidebar">
-    <a routerLink="/" class="logo-chip" aria-label="Retour au site"><img class="logo" src="assets/logo.png" alt="OCD"></a>
-    <nav class="sidebar-nav">
-      @for (item of navItems; track item; let i = $index) {
-        <button type="button" class="nav-item" [class.active]="i === 0">{{ item }}</button>
+@if (!auth.isLoggedIn()) {
+  <!-- CONNEXION ADMIN -->
+  <div class="login">
+    <form class="login-card" (ngSubmit)="login()">
+      <img class="logo" src="assets/logo.png" alt="OCD">
+      <h1 class="page-title page-title--sm">Espace administration</h1>
+      <p class="muted">Connecte-toi pour gérer les réservations.</p>
+
+      @if (loginError(); as msg) {
+        <p class="alert" role="alert">{{ msg }}</p>
       }
-    </nav>
-    <p class="sidebar-foot">Connecté en tant qu'admin OCD</p>
-  </aside>
 
-  <main class="admin-main">
-    <div class="admin-top">
-      <div>
-        <h1 class="page-title page-title--sm">Réservations</h1>
-        <p class="muted small">Données d'exemple · Décembre 2026</p>
+      <div class="field">
+        <label for="login-email">Email</label>
+        <input id="login-email" name="email" type="email" autocomplete="username" placeholder="ocd@gmail.com" [ngModel]="email()" (ngModelChange)="email.set($event)">
       </div>
-      <div class="admin-tools">
-        <label for="q" class="sr-only">Rechercher</label>
-        <input id="q" type="search" class="search" placeholder="Rechercher un business" [ngModel]="q()" (ngModelChange)="q.set($event)">
-        <button type="button" class="btn btn-ink btn-sm">Exporter en CSV</button>
+      <div class="field">
+        <label for="login-pwd">Mot de passe</label>
+        <input id="login-pwd" name="password" type="password" autocomplete="current-password" [ngModel]="password()" (ngModelChange)="password.set($event)">
       </div>
-    </div>
 
-    <!-- CHIFFRES -->
-    <div class="stats">
-      <div class="stat">
-        <p class="muted small">Réservations</p>
-        <p class="stat-value">{{ statCount }}</p>
-      </div>
-      <div class="stat">
-        <p class="muted small">Encaissé</p>
-        <p class="stat-value">{{ money(statPaid) }}</p>
-      </div>
-      <div class="stat">
-        <p class="muted small">En attente de paiement</p>
-        <p class="stat-value">{{ money(statPending) }}</p>
-      </div>
-      <div class="stat stat--accent">
-        <p class="small">Part des lives à distance</p>
-        <p class="stat-value">{{ statRemote }} %</p>
-      </div>
-    </div>
-
-    <!-- FILTRES -->
-    <div class="filters">
-      <div class="pill-row pill-row--tight" role="group" aria-label="Format">
-        @for (f of modeFilters; track f.v) {
-          <button type="button" class="pill pill--sm" [class.active]="mode() === f.v" (click)="mode.set(f.v)">{{ f.label }}</button>
+      <button type="submit" class="btn btn-accent" [disabled]="loggingIn() || !email() || !password()">
+        {{ loggingIn() ? 'Connexion...' : 'Se connecter' }}
+      </button>
+      <a routerLink="/" class="login-back">Retour au site</a>
+    </form>
+  </div>
+} @else {
+  <div class="admin">
+    <!-- MENU LATÉRAL -->
+    <aside class="sidebar">
+      <a routerLink="/" class="logo-chip" aria-label="Retour au site"><img class="logo" src="assets/logo.png" alt="OCD"></a>
+      <nav class="sidebar-nav">
+        @for (item of navItems; track item; let i = $index) {
+          <button type="button" class="nav-item" [class.active]="i === 0">{{ item }}</button>
         }
+      </nav>
+      <div class="sidebar-foot">
+        <p>{{ auth.email() }}</p>
+        <button type="button" class="nav-item" (click)="logout()">Se déconnecter</button>
       </div>
-      <div class="pill-row pill-row--tight" role="group" aria-label="Statut">
-        @for (f of statusFilters; track f.v) {
-          <button type="button" class="pill pill--sm" [class.active]="status() === f.v" (click)="status.set(f.v)">{{ f.label }}</button>
-        }
-      </div>
-    </div>
+    </aside>
 
-    <!-- TABLEAU -->
-    <div class="table-card">
-      <table>
-        <thead>
-          <tr>
-            <th>Référence</th>
-            <th>Business</th>
-            <th>Format</th>
-            <th>Date et heure</th>
-            <th>Package</th>
-            <th>Montant</th>
-            <th>Paiement</th>
-            <th>Statut</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (r of rows(); track r.ref) {
+    <main class="admin-main">
+      <div class="admin-top">
+        <div>
+          <h1 class="page-title page-title--sm">Réservations</h1>
+          <p class="muted small">Décembre 2026</p>
+        </div>
+        <div class="admin-tools">
+          <label for="q" class="sr-only">Rechercher</label>
+          <input id="q" type="search" class="search" placeholder="Rechercher un business" [ngModel]="q()" (ngModelChange)="q.set($event)">
+          <button type="button" class="btn btn-ink btn-sm" (click)="exportCsv()">Exporter en CSV</button>
+        </div>
+      </div>
+
+      @if (loadError(); as msg) {
+        <p class="alert" role="alert">{{ msg }}</p>
+      }
+
+      <!-- CHIFFRES -->
+      @if (stats(); as s) {
+        <div class="stats">
+          <div class="stat">
+            <p class="muted small">Réservations</p>
+            <p class="stat-value">{{ s.count }}</p>
+          </div>
+          <div class="stat">
+            <p class="muted small">Encaissé</p>
+            <p class="stat-value">{{ money(s.paid) }}</p>
+          </div>
+          <div class="stat">
+            <p class="muted small">En attente de paiement</p>
+            <p class="stat-value">{{ money(s.pending) }}</p>
+          </div>
+          <div class="stat stat--accent">
+            <p class="small">Part des lives à distance</p>
+            <p class="stat-value">{{ s.remote_share }} %</p>
+          </div>
+        </div>
+      }
+
+      <!-- FILTRES -->
+      <div class="filters">
+        <div class="pill-row pill-row--tight" role="group" aria-label="Format">
+          @for (f of modeFilters; track f.v) {
+            <button type="button" class="pill pill--sm" [class.active]="mode() === f.v" (click)="mode.set(f.v)">{{ f.label }}</button>
+          }
+        </div>
+        <div class="pill-row pill-row--tight" role="group" aria-label="Statut">
+          @for (f of statusFilters; track f.v) {
+            <button type="button" class="pill pill--sm" [class.active]="status() === f.v" (click)="status.set(f.v)">{{ f.label }}</button>
+          }
+        </div>
+      </div>
+
+      <!-- TABLEAU -->
+      <div class="table-card">
+        <table>
+          <thead>
             <tr>
-              <td class="muted">{{ r.ref }}</td>
-              <td><span class="cell-main">{{ r.biz }}</span><span class="cell-sub">{{ r.person }}</span></td>
-              <td>{{ r.place }}</td>
-              <td>{{ r.when }}</td>
-              <td>{{ r.pkg }}</td>
-              <td class="strong">{{ money(r.amount) }}</td>
-              <td>{{ r.method }}</td>
-              <td><span [class]="chipClass(r.status)">{{ r.status }}</span></td>
+              <th>Référence</th>
+              <th>Business</th>
+              <th>Format</th>
+              <th>Date et heure</th>
+              <th>Package</th>
+              <th>Montant</th>
+              <th>Paiement</th>
+              <th>Statut</th>
             </tr>
-          }
-        </tbody>
-      </table>
-      @if (rows().length === 0) {
-        <p class="table-empty">Aucune réservation ne correspond à ces filtres.</p>
-      }
-    </div>
-
-    <!-- PANNEAUX -->
-    <div class="panels">
-      <div class="panel panel--wide">
-        <p class="panel-title">Créneaux réservés, 1er au 7 décembre</p>
-        <p class="muted small panel-sub">Sur 6 créneaux par jour</p>
-        <div class="bars">
-          @for (d of week; track d.label) {
-            <div class="bar-row">
-              <span class="bar-label">{{ d.label }}</span>
-              <div class="bar-track"><div class="bar-fill" [style.width.%]="d.pct"></div></div>
-              <span class="bar-count">{{ d.count }}/6</span>
-            </div>
-          }
-        </div>
+          </thead>
+          <tbody>
+            @for (r of rows(); track r.id) {
+              <tr>
+                <td class="muted">{{ r.ref }}</td>
+                <td><span class="cell-main">{{ r.biz }}</span><span class="cell-sub">{{ r.person }} · {{ r.phone }}</span></td>
+                <td>{{ r.place }}</td>
+                <td>{{ r.when }}</td>
+                <td>{{ r.pkg }}</td>
+                <td class="strong">{{ money(r.amount) }}</td>
+                <td>{{ r.method }}</td>
+                <td>
+                  <span [class]="chipClass(r.status)">{{ r.status }}</span>
+                  <select class="select-sm" [attr.aria-label]="'Changer le statut de ' + r.biz" [ngModel]="r.status" (ngModelChange)="setStatus(r, $event)">
+                    @for (st of statuses; track st) {
+                      <option [value]="st">{{ st }}</option>
+                    }
+                  </select>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (rows().length === 0) {
+          <p class="table-empty">Aucune réservation ne correspond à ces filtres.</p>
+        }
       </div>
 
-      <div class="panel">
-        <p class="panel-title">Packages et promotions</p>
-        <div class="pkg-list">
-          @for (p of pkgs; track p.name) {
-            <div class="pkg-list-row">
-              <div><span class="cell-main">{{ p.name }}</span><span class="cell-sub">{{ p.note }}</span></div>
-              <span class="strong">{{ p.price }}</span>
-            </div>
-          }
+      <!-- PANNEAUX -->
+      <div class="panels">
+        <div class="panel panel--wide">
+          <p class="panel-title">Créneaux réservés, 1er au 7 décembre</p>
+          <p class="muted small panel-sub">Sur 6 créneaux par jour</p>
+          <div class="bars">
+            @for (d of week(); track d.label) {
+              <div class="bar-row">
+                <span class="bar-label">{{ d.label }}</span>
+                <div class="bar-track"><div class="bar-fill" [style.width.%]="d.pct"></div></div>
+                <span class="bar-count">{{ d.count }}/6</span>
+              </div>
+            }
+          </div>
         </div>
-        <button type="button" class="btn btn-outline btn-sm panel-btn">Créer une promotion</button>
+
+        <div class="panel">
+          <p class="panel-title">Packages et promotions</p>
+          <div class="pkg-list">
+            @for (p of pkgs(); track p.id) {
+              <div class="pkg-list-row">
+                <div><span class="cell-main">{{ p.name }}</span><span class="cell-sub">{{ p.tagline }}</span></div>
+                <span class="strong">{{ money(p.price) }}</span>
+              </div>
+            }
+            @if (stats(); as s) {
+              @if (s.promo_enabled) {
+                <div class="pkg-list-row">
+                  <div><span class="cell-main">Offre de lancement</span><span class="cell-sub">Active · −{{ s.promo_percent }} % sur tous les packages</span></div>
+                  <span class="strong">−{{ s.promo_percent }} %</span>
+                </div>
+              }
+            }
+          </div>
+        </div>
       </div>
-    </div>
-  </main>
-</div>
+    </main>
+  </div>
+}

@@ -56,7 +56,7 @@
       <p class="promo-pill">Offre de lancement : −20 % sur ta réservation</p>
     </div>
     <div class="grid-auto grid-auto--wide">
-      @for (p of svc.packages; track p.id) {
+      @for (p of svc.packages(); track p.id) {
         <div class="teaser-card">
           <p class="teaser-name">{{ p.name }}</p>
           <p class="teaser-price">{{ svc.money(p.price) }}</p>

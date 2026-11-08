@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BookingService } from '../../core/booking.service';
@@ -12,8 +12,12 @@ import { SiteFooterComponent } from '../../shared/site-footer/site-footer.compon
   imports: [FormsModule, RouterLink, SiteHeaderComponent, SiteFooterComponent],
   templateUrl: './booking.component.html',
 })
-export class BookingComponent {
+export class BookingComponent implements OnInit {
   readonly svc = inject(BookingService);
   readonly countries = COUNTRIES;
   readonly weekdays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+
+  ngOnInit(): void {
+    this.svc.refresh();
+  }
 }

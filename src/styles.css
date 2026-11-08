@@ -297,3 +297,17 @@ td { padding: 14px 16px; border-top: 1px solid var(--line); }
 .pkg-list { display: flex; flex-direction: column; gap: 12px; }
 .pkg-list-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; }
 .panel-btn { margin-top: 16px; }
+
+/* ---------- Alertes, connexion admin ---------- */
+.alert { background: #FDE2DC; color: #7A1F0E; border: 1px solid #F3B9AB; border-radius: 12px; padding: 12px 16px; font-size: 14px; font-weight: 500; margin-bottom: 20px; }
+.day:disabled { background: #F3EAE0; border-color: var(--line); color: #6B5B4D; text-decoration: line-through; }
+
+.login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 20px; background: var(--cream); }
+.login-card { width: 100%; max-width: 420px; background: var(--white); border: 1px solid var(--line); border-radius: 28px; padding: 36px; display: flex; flex-direction: column; gap: 16px; }
+.login-card .logo { align-self: flex-start; margin-bottom: 4px; }
+.login-card .alert { margin: 0; }
+.login-back { text-align: center; font-size: 14px; font-weight: 500; }
+
+.sidebar-foot p { font-size: 13px; color: var(--line-strong); margin-bottom: 8px; word-break: break-all; }
+.sidebar-foot .nav-item { width: 100%; border: 1px solid var(--line-strong); }
+.select-sm { display: block; margin-top: 8px; font-size: 13px; padding: 6px 8px; min-height: 36px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--white); color: var(--ink); }

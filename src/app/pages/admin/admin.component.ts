@@ -1,10 +1,13 @@
-import { Component, computed, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ADMIN_ROWS, WEEK, moneyShort } from '../../core/data';
+import { AdminPkg, AdminRow, AdminStats, ApiService, Status, WeekDay } from '../../core/api.service';
+import { AuthService } from '../../core/auth.service';
+import { moneyShort } from '../../core/data';
 
 type ModeFilter = 'all' | 'presentiel' | 'remote';
-type StatusFilter = 'all' | 'Payé' | 'En attente' | 'Annulé';
+type StatusFilter = 'all' | Status;
 
 @Component({
   selector: 'app-admin',
@@ -12,9 +15,25 @@ type StatusFilter = 'all' | 'Payé' | 'En attente' | 'Annulé';
   imports: [FormsModule, RouterLink],
   templateUrl: './admin.component.html',
 })
-export class AdminComponent {
+export class AdminComponent implements OnInit {
+  readonly auth = inject(AuthService);
+  private readonly api = inject(ApiService);
   readonly money = moneyShort;
 
+  // Connexion
+  readonly email = signal('');
+  readonly password = signal('');
+  readonly loginError = signal<string | null>(null);
+  readonly loggingIn = signal(false);
+
+  // Données venant de l'API
+  readonly allRows = signal<AdminRow[]>([]);
+  readonly stats = signal<AdminStats | null>(null);
+  readonly week = signal<WeekDay[]>([]);
+  readonly pkgs = signal<AdminPkg[]>([]);
+  readonly loadError = signal<string | null>(null);
+
+  // Filtres
   readonly mode = signal<ModeFilter>('all');
   readonly status = signal<StatusFilter>('all');
   readonly q = signal('');
@@ -30,12 +49,12 @@ export class AdminComponent {
     { v: 'En attente', label: 'En attente' },
     { v: 'Annulé', label: 'Annulé' },
   ];
-
+  readonly statuses: Status[] = ['Payé', 'En attente', 'Annulé'];
   readonly navItems = ['Réservations', 'Calendrier', 'Packages et promos', 'Paiements', 'Clients', 'Paramètres'];
 
   readonly rows = computed(() => {
     const q = this.q().trim().toLowerCase();
-    return ADMIN_ROWS.filter(
+    return this.allRows().filter(
       (r) =>
         (this.mode() === 'all' || (this.mode() === 'remote' ? r.remote : !r.remote)) &&
         (this.status() === 'all' || r.status === this.status()) &&
@@ -43,20 +62,83 @@ export class AdminComponent {
     );
   });
 
-  private readonly active = ADMIN_ROWS.filter((r) => r.status !== 'Annulé');
-  readonly statCount = this.active.length;
-  readonly statPaid = ADMIN_ROWS.filter((r) => r.status === 'Payé').reduce((a, r) => a + r.amount, 0);
-  readonly statPending = ADMIN_ROWS.filter((r) => r.status === 'En attente').reduce((a, r) => a + r.amount, 0);
-  readonly statRemote = Math.round((this.active.filter((r) => r.remote).length / this.active.length) * 100);
+  constructor() {
+    // Si le jeton expire (l'intercepteur déconnecte), on vide l'écran
+    effect(() => {
+      if (!this.auth.isLoggedIn()) {
+        this.allRows.set([]);
+        this.stats.set(null);
+      }
+    });
+  }
 
-  readonly week = WEEK.map((d) => ({ ...d, pct: Math.round((d.count / 6) * 100) }));
+  ngOnInit(): void {
+    if (this.auth.isLoggedIn()) this.loadAll();
+  }
 
-  readonly pkgs = [
-    { name: 'Standard', note: 'Live de 1h30 + replay', price: '15 000 F' },
-    { name: 'Boost', note: 'Annonce sur les réseaux OCD', price: '20 000 F' },
-    { name: 'Premium', note: 'Annonce par Bovan', price: '45 000 F' },
-    { name: 'Offre de lancement', note: 'Active · −20 % sur tous les packages', price: '−20 %' },
-  ];
+  login(): void {
+    if (this.loggingIn()) return;
+    this.loginError.set(null);
+    this.loggingIn.set(true);
+    this.auth.login(this.email().trim(), this.password()).subscribe({
+      next: () => {
+        this.loggingIn.set(false);
+        this.password.set('');
+        this.loadAll();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loggingIn.set(false);
+        this.loginError.set(
+          err.status === 401
+            ? 'Email ou mot de passe incorrect.'
+            : 'Impossible de joindre le serveur. Vérifie que le backend est lancé.',
+        );
+      },
+    });
+  }
+
+  logout(): void {
+    this.auth.logout();
+  }
+
+  loadAll(): void {
+    this.loadError.set(null);
+    const fail = (err: HttpErrorResponse) => {
+      if (err.status !== 401) this.loadError.set('Impossible de charger les données.');
+    };
+    this.api.adminReservations().subscribe({ next: (r) => this.allRows.set(r), error: fail });
+    this.api.adminStats().subscribe({ next: (s) => this.stats.set(s), error: fail });
+    this.api.adminWeek().subscribe({ next: (w) => this.week.set(w), error: fail });
+    this.api.adminPackages().subscribe({ next: (p) => this.pkgs.set(p), error: fail });
+  }
+
+  setStatus(row: AdminRow, status: Status): void {
+    if (status === row.status) return;
+    this.api.setStatus(row.id, status).subscribe({
+      next: () => this.loadAll(),
+      error: (err: HttpErrorResponse) => {
+        this.loadError.set(err.status === 409 ? err.error?.detail ?? 'Créneau déjà pris.' : 'Modification impossible.');
+        this.loadAll();
+      },
+    });
+  }
+
+  exportCsv(): void {
+    this.api
+      .exportCsv({
+        mode: this.mode() === 'all' ? undefined : this.mode(),
+        status: this.status() === 'all' ? undefined : this.status(),
+        q: this.q().trim() || undefined,
+      })
+      .subscribe((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'reservations-ocd.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+  }
 
   chipClass(status: string): string {
     return status === 'Payé' ? 'chip chip--paid' : status === 'En attente' ? 'chip chip--pending' : 'chip chip--cancelled';

@@ -1,0 +1,32 @@
+<header class="site-header">
+  <div class="container header-row">
+    <a routerLink="/" class="logo-link" aria-label="OCD Live, retour à l'accueil" (click)="svc.reset()">
+      <img class="logo" src="assets/logo.png" alt="OCD">
+    </a>
+
+    @if (variant() === 'home') {
+      <nav class="nav">
+        <a routerLink="/" fragment="how">Comment ça marche</a>
+        <a routerLink="/" fragment="packages">Packages</a>
+        <button type="button" class="btn btn-accent btn-sm" (click)="start('presentiel')">Réserver mon live</button>
+      </nav>
+    } @else {
+      <ol class="stepper">
+        @for (s of steps; track s.n) {
+          <li>
+            <button
+              type="button"
+              class="step-btn"
+              [class.active]="svc.step() === s.n && !svc.done()"
+              [class.done]="svc.step() > s.n || svc.done()"
+              (click)="svc.goStep(s.n)"
+            >
+              <span class="step-dot">{{ s.n }}</span>
+              <span>{{ s.label }}</span>
+            </button>
+          </li>
+        }
+      </ol>
+    }
+  </div>
+</header>

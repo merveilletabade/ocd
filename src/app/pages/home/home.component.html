@@ -1,0 +1,74 @@
+<app-site-header variant="home" />
+
+<main>
+  <section class="container hero">
+    <p class="eyebrow">Lives dès le 1er décembre 2026</p>
+    <h1 class="display">Réserve ton live OCD. Présente ton produit à toute l'Afrique.</h1>
+    <p class="lead">Choisis ton format, ta date et ton package. Paiement par mobile money ou carte, confirmation immédiate.</p>
+
+    <div class="format-grid">
+      <button type="button" class="format-card format-card--accent" (click)="start('presentiel')">
+        <span class="icon-chip icon-chip--ink">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFF8F1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+        </span>
+        <span class="format-title">Live en présentiel</span>
+        <span class="format-text">Viens présenter ton produit sur place, à Lomé, Togo, devant la caméra OCD.</span>
+        <span class="format-cta">
+          Choisir une date
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </button>
+
+      <button type="button" class="format-card format-card--dark" (click)="start('distance')">
+        <span class="icon-chip icon-chip--accent">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1B120A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>
+        </span>
+        <span class="format-title">Live à distance</span>
+        <span class="format-text">Depuis chez toi, dans n'importe quel pays d'Afrique. Tu choisis ton pays, on s'occupe du reste.</span>
+        <span class="format-cta">
+          Choisir une date
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </button>
+    </div>
+  </section>
+
+  <section id="how" class="container section">
+    <h2 class="section-title">Comment ça marche</h2>
+    <div class="grid-auto">
+      <div class="how-item">
+        <p class="how-title">1. Choisis ta date</p>
+        <p class="muted">Présentiel ou à distance, puis un créneau de 1h30 dans le calendrier.</p>
+      </div>
+      <div class="how-item">
+        <p class="how-title">2. Prends ton package</p>
+        <p class="muted">Du live simple au pack complet avec annonce par Bovan.</p>
+      </div>
+      <div class="how-item">
+        <p class="how-title">3. Paie et c'est confirmé</p>
+        <p class="muted">Mobile money ou carte. Tu reçois ta confirmation tout de suite.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="packages" class="container section section--last">
+    <div class="section-head">
+      <h2 class="section-title">Trois packages, un seul objectif : te faire voir</h2>
+      <p class="promo-pill">Offre de lancement : −20 % sur ta réservation</p>
+    </div>
+    <div class="grid-auto grid-auto--wide">
+      @for (p of svc.packages; track p.id) {
+        <div class="teaser-card">
+          <p class="teaser-name">{{ p.name }}</p>
+          <p class="teaser-price">{{ svc.money(p.price) }}</p>
+          <p class="muted">{{ p.tagline }}</p>
+        </div>
+      }
+    </div>
+    <div class="section-action">
+      <button type="button" class="btn btn-ink" (click)="start('presentiel')">Réserver mon live</button>
+    </div>
+  </section>
+</main>
+
+<app-site-footer />

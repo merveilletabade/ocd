@@ -16,7 +16,7 @@ export class SiteHeaderComponent {
 
   readonly steps = [
     { n: 1, label: 'Date & heure' },
-    { n: 2, label: 'Package' },
+    { n: 2, label: 'Ton offre' },
     { n: 3, label: 'Paiement' },
   ];
 

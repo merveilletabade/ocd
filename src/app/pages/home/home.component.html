@@ -33,17 +33,17 @@
   </section>
 
   <section id="how" class="container section">
-    <h2 class="section-title">Comment ça marche</h2>
+    <h2 class="section-title" reveal>Comment ça marche</h2>
     <div class="grid-auto">
-      <div class="how-item">
+      <div class="how-item" reveal [revealDelay]="1">
         <p class="how-title">1. Choisis ta date</p>
         <p class="muted">Présentiel ou à distance, puis un créneau de 1h30 dans le calendrier.</p>
       </div>
-      <div class="how-item">
+      <div class="how-item" reveal [revealDelay]="2">
         <p class="how-title">2. Prends ton package</p>
-        <p class="muted">Du live simple au pack complet avec annonce par Bovan.</p>
+        <p class="muted">Du live de 1h30 au live VIP de plusieurs heures, avec annonce par Bovan.</p>
       </div>
-      <div class="how-item">
+      <div class="how-item" reveal [revealDelay]="3">
         <p class="how-title">3. Paie et c'est confirmé</p>
         <p class="muted">Mobile money ou carte. Tu reçois ta confirmation tout de suite.</p>
       </div>
@@ -51,22 +51,72 @@
   </section>
 
   <section id="packages" class="container section section--last">
-    <div class="section-head">
-      <h2 class="section-title">Trois packages, un seul objectif : te faire voir</h2>
-      <p class="promo-pill">Offre de lancement : −20 % sur ta réservation</p>
-    </div>
-    <div class="grid-auto grid-auto--wide">
-      @for (p of svc.packages(); track p.id) {
-        <div class="teaser-card">
-          <p class="teaser-name">{{ p.name }}</p>
-          <p class="teaser-price">{{ svc.money(p.price) }}</p>
-          <p class="muted">{{ p.tagline }}</p>
-        </div>
+    <h2 class="section-title" reveal>Du live express au live VIP</h2>
+    <p class="section-lead" reveal [revealDelay]="1">Choisis l'offre qui te convient, puis ta date. Tout se fait en quelques clics.</p>
+
+    <p class="group-label" reveal>Live 1h30</p>
+    <div class="plans">
+      @for (p of standard(); track p.id; let i = $index) {
+        <article class="plan" [class.plan--hot]="p.badge" reveal [revealDelay]="i">
+          @if (p.badge) {
+            <span class="plan-badge">Le plus choisi</span>
+          }
+          <div class="plan-head">
+            <h3 class="plan-name">{{ p.name }}</h3>
+            <span class="plan-dur">{{ dur(p.slots) }}</span>
+          </div>
+          <p class="plan-tagline">{{ p.tagline }}</p>
+          <p class="plan-price">
+            @if (svc.hasPromo(p)) {
+              {{ svc.money(svc.final(p)) }}
+              <s class="plan-old">{{ svc.money(p.price) }}</s>
+              <span class="plan-promo">−{{ p.promo_percent }} %</span>
+            } @else {
+              {{ svc.money(p.price) }}
+            }
+          </p>
+          <ul class="plan-list">
+            @for (f of p.features; track f) {
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>{{ f }}</span></li>
+            }
+          </ul>
+          <button type="button" class="btn plan-btn" (click)="choose(p)">Choisir {{ p.name }}</button>
+        </article>
       }
     </div>
-    <div class="section-action">
-      <button type="button" class="btn btn-ink" (click)="start('presentiel')">Réserver mon live</button>
-    </div>
+
+    @if (vip().length) {
+      <p class="group-label group-label--vip" reveal>Live VIP <span>plus long, plus visible</span></p>
+      <div class="plans plans--vip">
+        @for (p of vip(); track p.id; let i = $index) {
+        <article class="plan plan--vip" [class.plan--hot]="p.badge" reveal [revealDelay]="i">
+          @if (p.badge) {
+            <span class="plan-badge">Le plus choisi</span>
+          }
+          <div class="plan-head">
+            <h3 class="plan-name">{{ p.name }}</h3>
+            <span class="plan-dur">{{ dur(p.slots) }}</span>
+          </div>
+          <p class="plan-tagline">{{ p.tagline }}</p>
+          <p class="plan-price">
+            @if (svc.hasPromo(p)) {
+              {{ svc.money(svc.final(p)) }}
+              <s class="plan-old">{{ svc.money(p.price) }}</s>
+              <span class="plan-promo">−{{ p.promo_percent }} %</span>
+            } @else {
+              {{ svc.money(p.price) }}
+            }
+          </p>
+          <ul class="plan-list">
+            @for (f of p.features; track f) {
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>{{ f }}</span></li>
+            }
+          </ul>
+          <button type="button" class="btn plan-btn" (click)="choose(p)">Choisir {{ p.name }}</button>
+        </article>
+        }
+      </div>
+    }
   </section>
 </main>
 

@@ -1,0 +1,5 @@
+Logos des moyens de paiement affichés à l'étape Paiement.
+
+Il manque encore : free-money.png (Free Money).
+Ajoute-le ici avec exactement ce nom et il s'affichera tout seul.
+(Si ton fichier a un autre nom ou format, change la ligne 'free' dans src/app/core/data.ts.)
